@@ -39,11 +39,21 @@ The work-stealing scheduler builds upon the sharded scheduler model and addresse
 
 ## Terminology
 
-@/**Handle**: In computer programming, a handle is an abstract reference to a resource that is used when application software references blocks of memory or objects that are managed by another system like a database or an operating system. Example of common handles are: `network socket`, `file descriptor`, `database connections`, `process identifiers (pIDs)`. We can call it is like a pointer to the entity.
+### @ Handle
 
-@/**JoinHandle**: Returns on new thread spawned, `JoinHandle::join` blocks until the corresponding thread is done executing (task is finished ✅). It asks the OS to block the main thread (the one calling `join()`) until the joined thread is done, and collect its status.
+In computer programming, a handle is an abstract reference to a resource that is used when application software references blocks of memory or objects that are managed by another system like a database or an operating system. Example of common handles are: `network socket`, `file descriptor`, `database connections`, `process identifiers (pIDs)`. We can call it is like a pointer to the entity.
+
+### @ JoinHandle
+
+Returns on new thread spawned, `JoinHandle::join` blocks until the corresponding thread is done executing (task is finished ✅). It asks the OS to block the main thread (the one calling `join()`) until the joined thread is done, and collect its status.
 
 Before calling join(), you only know that you have handed the thread to the OS. You don't know later in the code if it has already been started, is running, has finished, was killed by the OS, or has panic()'ed, etc.
+
+### @ Yield points
+
+Injected to the program during task execution and checks if the task has been executing for long enough and yields back to the scheduler if so.
+
+> Unfortunately, Tokio is not able to use this technique as Rust's async generators do not provide any mechanism for executors (like Tokio) to inject such yield points.
 
 ## References
 
@@ -56,3 +66,8 @@ Before calling join(), you only know that you have handed the thread to the OS. 
 - [`Rust` | "How Tokio schedule tasks?" on Rust Magazine](https://rustmagazine.org/issue-4/how-tokio-schedule-tasks/)
 - [`Rust` | Advanced Concepts | Scheduling Internals](https://tontinton.com/posts/scheduling-internals/)
 - [`Rust` | About Tokio scheduler internal](https://tokio.rs/blog/2019-10-scheduler): Understanding how Tokio scheduler works under the hood
+
+- [`Rust` | Runtime-agnostic cooperative task scheduling budget](https://internals.rust-lang.org/t/runtime-agnostic-cooperative-task-scheduling-budget/18796?page=2): Tokio has a concept of a cooperative task scheduling budget, by which its futures keep track of how much work they've done, and cooperatively yield if they've done too much work.
+- [`Rust` | Tokio Runtime Preemption](https://tokio.rs/blog/2020-04-preemption): While task is under load, there won't be a problem but if the data is received faster than it can be processed, it is possible that more data will have already been received by the time the processing of a data chunk completes. `.await` will never yield control back to hte scheduler, other tasks will not be scheduled, resulting in starvation and large latency variance.
+- [`Rust` | 4 year plan for async/await](https://without.boats/blog/a-four-year-plan/)
+- [`Rust` | Async & Await in Rust: a full proposal](https://without.boats/blog/async-await-final/)

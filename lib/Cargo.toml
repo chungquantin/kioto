@@ -1,7 +1,8 @@
 [package]
-name = "tokio_xv6"
+name = "kioto"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.80"
 oneshot = { version = "0.1.6", features = ["async"] }

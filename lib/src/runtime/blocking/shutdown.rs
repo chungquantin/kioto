@@ -1,6 +1,6 @@
 //! A shutdown channel.
 use oneshot;
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 #[derive(Debug, Clone)]
 pub(super) struct Sender {
@@ -15,4 +15,17 @@ pub(super) struct Receiver {
     rx: oneshot::Receiver<()>,
 }
 
-impl Receiver {}
+pub(super) fn channel() -> (Sender, Receiver) {
+    let (tx, rx) = oneshot::channel();
+    let tx = Sender { _tx: Arc::new(tx) };
+    let rx = Receiver { rx };
+
+    (tx, rx)
+}
+
+impl Receiver {
+    /// Blocks the current thread until all `Sender` handles drop.
+    pub(crate) fn wait(&mut self, timeout: Option<Duration>) {
+        unimplemented!()
+    }
+}

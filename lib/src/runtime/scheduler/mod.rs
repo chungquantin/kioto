@@ -1,8 +1,7 @@
 mod current_thread;
-mod scheduler;
+pub mod scheduler;
 mod shared;
 
-pub use scheduler::*;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]

@@ -1,4 +1,4 @@
-use super::{scheduler::Scheduler, types::join::JoinHandle};
+use super::{scheduler::scheduler::Scheduler, types::join::JoinHandle};
 use std::future::Future;
 
 pub struct Runtime {
@@ -11,10 +11,8 @@ impl Runtime {
             scheduler: Scheduler::build_current_threaded_scheduler(),
         };
     }
-}
 
-impl super::types::runtime::TokioRuntime for Runtime {
-    fn spawn<F>(&self, future: F) -> JoinHandle<F::Output>
+    pub fn spawn<F>(&self, future: F) -> JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static,
@@ -22,7 +20,7 @@ impl super::types::runtime::TokioRuntime for Runtime {
         todo!()
     }
 
-    fn spawn_blocking<F, R>(&self, func: F) -> JoinHandle<R>
+    pub fn spawn_blocking<F, R>(&self, func: F) -> JoinHandle<R>
     where
         F: FnOnce() -> R + Send + 'static,
         R: Send + 'static,
@@ -30,14 +28,14 @@ impl super::types::runtime::TokioRuntime for Runtime {
         todo!()
     }
 
-    fn block_on<F: Future>(&self, future: F) -> F::Output {
+    pub fn block_on<F: Future>(&self, future: F) -> F::Output {
         todo!()
     }
 }
 
 impl Drop for Runtime {
     fn drop(&mut self) {
-        unimplemented!()
+        println!("DROP Runtime");
     }
 }
 

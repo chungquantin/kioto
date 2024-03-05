@@ -1,5 +1,14 @@
-use super::{schedule::BlockingSchedule, shutdown};
-use crate::runtime::{builder::ThreadNameFn, task, types::common::Callback};
+use anyhow::Result;
+
+use super::{schedule::BlockingSchedule, shutdown, task::BlockingTask};
+use crate::runtime::{
+    builder::ThreadNameFn,
+    handle::Handle,
+    task,
+    types::{common::Callback, join::JoinHandle},
+    Builder,
+};
+use core::fmt;
 use std::{
     collections::{HashMap, VecDeque},
     sync::{
@@ -9,15 +18,81 @@ use std::{
     time::Duration,
 };
 
+const KEEP_ALIVE: Duration = Duration::from_secs(10);
+
 /// Thread pool for blocking operations
 pub(crate) struct BlockingPool {
     spawner: Spawner,
+    shutdown_rx: shutdown::Receiver,
+}
+
+impl BlockingPool {
+    pub(crate) fn new(builder: &Builder, thread_cap: usize) -> BlockingPool {
+        let (shutdown_tx, shutdown_rx) = shutdown::channel();
+        let keep_alive = builder.keep_alive.unwrap_or(KEEP_ALIVE);
+
+        BlockingPool {
+            spawner: Spawner {
+                inner: Arc::new(Inner {
+                    shared: Mutex::new(Shared {
+                        queue: VecDeque::new(),
+                        num_notify: 0,
+                        shutdown: false,
+                        shutdown_tx: Some(shutdown_tx),
+                        last_exiting_thread: None,
+                        worker_threads: HashMap::new(),
+                        worker_thread_index: 0,
+                    }),
+                    thread_name: builder.thread_name.clone(),
+                    stack_size: builder.thread_stack_size,
+                    after_start: builder.after_start.clone(),
+                    before_stop: builder.before_stop.clone(),
+                    thread_cap,
+                    metrics: SpawnerMetrics::default(),
+                    keep_alive,
+                }),
+            },
+            shutdown_rx,
+        }
+    }
+
+    pub(crate) fn spawner(&self) -> &Spawner {
+        &self.spawner
+    }
+}
+
+impl Drop for BlockingPool {
+    fn drop(&mut self) {
+        println!("DROP BlockingPool");
+    }
+}
+
+impl fmt::Debug for BlockingPool {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt.debug_struct("BlockingPool").finish()
+    }
 }
 
 /// Spawner responsible for spawning blocking threads
 #[derive(Clone)]
 pub(crate) struct Spawner {
     inner: Arc<Inner>,
+}
+
+impl Spawner {
+    #[track_caller]
+    pub(crate) fn spawn_blocking<F, R>(&self, rt: &Handle, func: F) -> JoinHandle<R>
+    where
+        F: FnOnce() -> R + Send + 'static,
+        R: Send + 'static,
+    {
+        let fut = BlockingTask::new(func);
+
+        unimplemented!()
+    }
+
+    #[track_caller]
+    pub(crate) fn spawn_task() {}
 }
 
 #[derive(Default)]

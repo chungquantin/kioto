@@ -13,7 +13,7 @@ const INITIAL_CAPACITY: usize = 64;
 
 /// Notified struct wrapper around the Task<Arc<Handle>>
 /// struct is used to manage the wake status of the task
-type NotifiedTask = task::Notified<Arc<Handle>>;
+type NotifiedTask = task::notified::Notified<Arc<Handle>>;
 
 struct SchedulerCore {
     tasks: VecDeque<NotifiedTask>,

@@ -25,6 +25,7 @@ pub(crate) struct CurrentThread {
 }
 
 /// Handle to the current thread scheduler
+#[derive(Debug, Clone)]
 pub(crate) struct Handle {
     /// Scheduler state shared across threads
     shared: Shared,

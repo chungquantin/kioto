@@ -1,2 +1,2 @@
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub(crate) struct Shared {}
